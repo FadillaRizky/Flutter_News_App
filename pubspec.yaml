@@ -37,6 +37,9 @@ dependencies:
   cupertino_icons: ^1.0.2
   news_api_flutter_package: ^1.1.0
   flutter_webview_plugin: ^0.4.0
+  pull_to_refresh: ^2.0.0
+  flutter_staggered_animations: ^1.1.1
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:
@@ -61,8 +64,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/vector.jpg
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -76,7 +80,15 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins/Poppins-Light.ttf
+          weight: 100
+        - asset: assets/fonts/Poppins/Poppins-Medium.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+          weight: 600
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

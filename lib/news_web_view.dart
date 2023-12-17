@@ -15,8 +15,9 @@ class _NewsWebViewState extends State<NewsWebView> {
     return WebviewScaffold(
       url: widget.url,
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: const Text("NEWS NOW"),
+        backgroundColor: Colors.blue,
+        iconTheme: IconThemeData(color: Colors.white),
+        title: const Text("News App",style: TextStyle(color: Colors.white),),
       ),
     );
   }

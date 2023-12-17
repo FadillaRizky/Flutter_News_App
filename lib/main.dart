@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_news_app/login.dart';
 import 'package:flutter_news_app/news_page.dart';
 
 void main() {
@@ -14,8 +15,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData(),
-      home: NewsPage(),
+      theme: ThemeData(
+          fontFamily: 'Poppins'
+      ),
+      home: LoginPage(),
     );
   }
 }
