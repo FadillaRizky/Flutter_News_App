@@ -49,9 +49,11 @@ class _NewsPageState extends State<NewsPage> {
   RefreshController refreshC = RefreshController();
   List<Article> result = [];
 
-  String API_KEY = "8d4f9669343d4f95a745c557a8b10acb";
+  String API_KEY = "5c5fb3cc64b641518c35edeb91863d3f";
 
   late String selectedCategory;
+
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   String? name;
   String? email;
@@ -195,6 +197,18 @@ class _NewsPageState extends State<NewsPage> {
                           builder: (ctx) => BacaNanti(
                                 idUser: id_user,
                               )));
+                },
+              ),
+              ListTile(
+                title: Text(
+                  "Log Out",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: Icon(Icons.logout,color: Colors.red,),
+                onTap: () {
+                   auth.signOut();
+                   Navigator.pop(context);
+                   Navigator.pushReplacement(context, MaterialPageRoute(builder: (ctx)=> LoginPage()));
                 },
               ),
             ],
