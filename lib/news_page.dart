@@ -1,7 +1,10 @@
 import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_news_app/baca_nanti.dart';
 import 'package:flutter_news_app/news_web_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,6 +12,9 @@ import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -20,8 +26,10 @@ class NewsPage extends StatefulWidget {
 class _NewsPageState extends State<NewsPage> {
   late Future<List<Article>> future;
   late Future<List<Article>> futureCarousel;
+  String id_user = "";
   String? searchTerm;
   bool isSearching = false;
+  bool isReadLater = false;
   TextEditingController searchController = TextEditingController();
   List<String> categoryItems = [
     "BUSINESS",
@@ -41,6 +49,9 @@ class _NewsPageState extends State<NewsPage> {
 
   late String selectedCategory;
 
+  String? name;
+  String? email;
+
   refreshData() async {
     pageSize = 10;
     future = getNewsData();
@@ -58,9 +69,49 @@ class _NewsPageState extends State<NewsPage> {
   @override
   void initState() {
     selectedCategory = categoryItems[0];
+    cekUser();
+    getPref();
     future = getNewsData();
     futureCarousel = getNewsCarousel();
     super.initState();
+  }
+
+  void cekUser() {
+    // Logic cek Data User apakah sudah pernah login
+    if (FirebaseAuth.instance.currentUser == null) {
+      FirebaseAuth.instance.currentUser;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LoginPage()));
+      });
+    }
+  }
+
+  Future<void> getPref() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      id_user = pref.getString('id_user')!;
+    });
+    setState(() {
+      getUserFromFirebase();
+    });
+  }
+
+  Future<void> getUserFromFirebase() async {
+    try {
+      FirebaseDatabase.instance
+          .ref()
+          .child("user") // Parent di database
+          .child(id_user) // Id user
+          .onValue
+          .listen((event) {
+        var snapshot = event.snapshot.value as Map;
+        name = snapshot['name'].toString();
+        email = snapshot['email'].toString();
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
   }
 
   Future<List<Article>> getNewsData({int? page}) async {
@@ -81,7 +132,6 @@ class _NewsPageState extends State<NewsPage> {
       query: searchTerm,
       category: "GENERAL",
       pageSize: 10,
-      
     );
   }
 
@@ -89,6 +139,37 @@ class _NewsPageState extends State<NewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: isSearching ? searchAppBar() : appBar(),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 30,
+              ),
+              Text(name ?? "Nama"),
+              Text(email ?? "email"),
+              SizedBox(
+                height: 70,
+              ),
+              ListTile(
+                title: Text(
+                  "Baca Nanti",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (ctx) => BacaNanti(
+                                idUser: id_user,
+                              )));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
           child: Column(
         children: [
@@ -125,9 +206,11 @@ class _NewsPageState extends State<NewsPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Error loading the news"),
-                      ElevatedButton(onPressed: (){
-                        refreshData();
-                      }, child: Text("Click to Refresh"))
+                      ElevatedButton(
+                          onPressed: () {
+                            refreshData();
+                          },
+                          child: Text("Click to Refresh"))
                     ],
                   );
                 } else {
@@ -138,9 +221,11 @@ class _NewsPageState extends State<NewsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text("No news available"),
-                        ElevatedButton(onPressed: (){
-                          refreshData();
-                        }, child: Text("Click to Refresh"))
+                        ElevatedButton(
+                            onPressed: () {
+                              refreshData();
+                            },
+                            child: Text("Click to Refresh"))
                       ],
                     );
                   }
@@ -188,9 +273,9 @@ class _NewsPageState extends State<NewsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 10),
           child: IconButton(
-            style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.black38),
-            foregroundColor: MaterialStateProperty.all(Colors.white)),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.black38),
+                  foregroundColor: MaterialStateProperty.all(Colors.white)),
               onPressed: () {
                 setState(() {
                   searchTerm = searchController.text;
@@ -205,10 +290,12 @@ class _NewsPageState extends State<NewsPage> {
 
   appBar() {
     return AppBar(
-      automaticallyImplyLeading: false,
       backgroundColor: Colors.blueAccent,
       iconTheme: IconThemeData(color: Colors.white),
-      title: const Text("News App",style: TextStyle(color: Colors.white),),
+      title: const Text(
+        "News App",
+        style: TextStyle(color: Colors.white),
+      ),
       actions: [
         IconButton(
             onPressed: () {
@@ -226,9 +313,8 @@ class _NewsPageState extends State<NewsPage> {
       items: articleList.map((i) {
         return Builder(
           builder: (BuildContext context) {
-
             return GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -255,7 +341,7 @@ class _NewsPageState extends State<NewsPage> {
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                   : null,
                             ),
                           );
@@ -289,9 +375,15 @@ class _NewsPageState extends State<NewsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(i.title ?? "-",style: TextStyle(color: Colors.white,fontSize: 18),maxLines: 1,),
                           Text(
-                              i.description ?? "-" ,style: TextStyle(color: Colors.white,fontSize: 12),maxLines: 2,
+                            i.title ?? "-",
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                            maxLines: 1,
+                          ),
+                          Text(
+                            i.description ?? "-",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            maxLines: 2,
                           ),
                         ],
                       ),
@@ -310,7 +402,6 @@ class _NewsPageState extends State<NewsPage> {
         autoPlayInterval: Duration(seconds: 2),
         autoPlayAnimationDuration: Duration(milliseconds: 800),
         autoPlayCurve: Curves.fastOutSlowIn,
-
       ),
     );
   }
@@ -330,7 +421,7 @@ class _NewsPageState extends State<NewsPage> {
             duration: const Duration(seconds: 1),
             child: SlideAnimation(
               verticalOffset: 44.0,
-              child: FadeInAnimation(child: _buildNewsItem(article)),
+              child: FadeInAnimation(child: _buildNewsItem(article,index)),
             ),
           );
         },
@@ -339,7 +430,7 @@ class _NewsPageState extends State<NewsPage> {
     );
   }
 
-  Widget _buildNewsItem(Article article) {
+  Widget _buildNewsItem(Article article,index) {
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -348,7 +439,7 @@ class _NewsPageState extends State<NewsPage> {
               builder: (context) => NewsWebView(url: article.url!),
             ));
       },
-      child:Padding(
+      child: Padding(
         padding: EdgeInsets.all(10),
         child: Stack(
           children: [
@@ -376,7 +467,7 @@ class _NewsPageState extends State<NewsPage> {
                       child: CircularProgressIndicator(
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                                loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     );
@@ -416,11 +507,28 @@ class _NewsPageState extends State<NewsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      article.title!,
-                      style: TextStyle(color: Colors.white,fontSize: 16),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            article.title!,
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        IconButton(
+                            onPressed: () {
+                            },
+                            icon: Icon(
+                                    Icons.bookmark,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ))
+                      ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -429,14 +537,15 @@ class _NewsPageState extends State<NewsPage> {
                           width: 120,
                           child: Text(
                             article.author ?? "-",
-                            style: TextStyle(color: Colors.white,fontSize: 11),
+                            style: TextStyle(color: Colors.white, fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
-                          DateFormat('EEEE, dd MMMM yyyy').format(DateTime.parse(article.publishedAt!)),
-                          style: TextStyle(color: Colors.white,fontSize: 11),
+                          DateFormat('EEEE, dd MMMM yyyy')
+                              .format(DateTime.parse(article.publishedAt!)),
+                          style: TextStyle(color: Colors.white, fontSize: 11),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -526,7 +635,10 @@ class _NewsPageState extends State<NewsPage> {
                     ? Colors.blueAccent.withOpacity(0.2)
                     : Colors.blueAccent,
               )),
-              child: Text(categoryItems[index],style: TextStyle(color: Colors.white),),
+              child: Text(
+                categoryItems[index],
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           );
         },
