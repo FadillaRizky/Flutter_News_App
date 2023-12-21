@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_news_app/baca_nanti.dart';
 import 'package:flutter_news_app/bookmark.dart';
 import 'package:flutter_news_app/news_web_view.dart';
@@ -31,6 +32,8 @@ class _NewsPageState extends State<NewsPage> {
   String? searchTerm;
   bool isSearching = false;
   TextEditingController searchController = TextEditingController();
+  List<Map<dynamic, dynamic>> bookmarkList = [];
+
   List<String> categoryItems = [
     "BUSINESS",
     "ENTERTAINMENT",
@@ -73,7 +76,42 @@ class _NewsPageState extends State<NewsPage> {
     getPref();
     future = getNewsData();
     futureCarousel = getNewsCarousel();
+    getBookmark();
     super.initState();
+  }
+
+  Future<void> getBookmark() async {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        EasyLoading.showError("Anda Perlu Login lagi!",
+            dismissOnTap: true, duration: const Duration(seconds: 5));
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LoginPage()));
+      });
+    }
+    await FirebaseDatabase.instance
+        .ref()
+        .child("bookmarks")
+        .child(user!.uid)
+        .onValue
+        .listen((event) async {
+      Map<dynamic, dynamic> data = event.snapshot.value as Map;
+      //     (event.snapshot as DatabaseEvent).snapshot.value
+      //         as Map<dynamic, dynamic>);
+      List<Map<dynamic, dynamic>> dataList = [];
+      data.forEach((key, value) {
+        dataList.add({
+          "title": sanitizePath(key),
+          "author": value["author"],
+          "image_url": value["image_url"],
+          "article_url": value["article_url"],
+        });
+      });
+      setState(() {
+        bookmarkList = dataList;
+      });
+    });
   }
 
   void cekUser() {
@@ -132,8 +170,15 @@ class _NewsPageState extends State<NewsPage> {
       query: searchTerm,
       category: "GENERAL",
       pageSize: 10,
-      
     );
+  }
+
+  String sanitizePath(String originalPath) {
+    // Replace the invalid characters with valid ones or remove them
+    String sanitized = originalPath.replaceAll(RegExp(r'[.#$\[\]]'), '');
+    // You might also want to replace spaces with a valid character like "_"
+    sanitized = sanitized.replaceAll(' ', '_');
+    return sanitized;
   }
 
   @override
@@ -207,9 +252,11 @@ class _NewsPageState extends State<NewsPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Error loading the news"),
-                      ElevatedButton(onPressed: (){
-                        refreshData();
-                      }, child: Text("Click to Refresh"))
+                      ElevatedButton(
+                          onPressed: () {
+                            refreshData();
+                          },
+                          child: Text("Click to Refresh"))
                     ],
                   );
                 } else {
@@ -220,9 +267,11 @@ class _NewsPageState extends State<NewsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text("No news available"),
-                        ElevatedButton(onPressed: (){
-                          refreshData();
-                        }, child: Text("Click to Refresh"))
+                        ElevatedButton(
+                            onPressed: () {
+                              refreshData();
+                            },
+                            child: Text("Click to Refresh"))
                       ],
                     );
                   }
@@ -270,9 +319,9 @@ class _NewsPageState extends State<NewsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 10),
           child: IconButton(
-            style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.black38),
-            foregroundColor: MaterialStateProperty.all(Colors.white)),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.black38),
+                  foregroundColor: MaterialStateProperty.all(Colors.white)),
               onPressed: () {
                 setState(() {
                   searchTerm = searchController.text;
@@ -310,9 +359,8 @@ class _NewsPageState extends State<NewsPage> {
       items: articleList.map((i) {
         return Builder(
           builder: (BuildContext context) {
-
             return GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -339,7 +387,7 @@ class _NewsPageState extends State<NewsPage> {
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                   : null,
                             ),
                           );
@@ -373,9 +421,15 @@ class _NewsPageState extends State<NewsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(i.title ?? "-",style: TextStyle(color: Colors.white,fontSize: 18),maxLines: 1,),
                           Text(
-                              i.description ?? "-" ,style: TextStyle(color: Colors.white,fontSize: 12),maxLines: 2,
+                            i.title ?? "-",
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                            maxLines: 1,
+                          ),
+                          Text(
+                            i.description ?? "-",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            maxLines: 2,
                           ),
                         ],
                       ),
@@ -394,7 +448,6 @@ class _NewsPageState extends State<NewsPage> {
         autoPlayInterval: Duration(seconds: 2),
         autoPlayAnimationDuration: Duration(milliseconds: 800),
         autoPlayCurve: Curves.fastOutSlowIn,
-
       ),
     );
   }
@@ -426,19 +479,13 @@ class _NewsPageState extends State<NewsPage> {
   Widget _buildNewsItem(Article article) {
     return InkWell(
       onTap: () {
-        Bookmark.insert(context, {
-          'title':article.title,
-          'author':article.author,
-          'image_url':article.urlToImage,
-          'article_url':article.url,
-        });
         // Navigator.push(
         //     context,
         //     MaterialPageRoute(
         //       builder: (context) => NewsWebView(url: article.url!),
         //     ));
       },
-      child:Padding(
+      child: Padding(
         padding: EdgeInsets.all(10),
         child: Stack(
           children: [
@@ -466,7 +513,7 @@ class _NewsPageState extends State<NewsPage> {
                       child: CircularProgressIndicator(
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                                loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     );
@@ -521,12 +568,35 @@ class _NewsPageState extends State<NewsPage> {
                         ),
                         IconButton(
                             onPressed: () {
+                              if (bookmarkList
+                                  .where((element) =>
+                                      sanitizePath(article.title!).contains(
+                                          sanitizePath(element['title'])))
+                                  .isNotEmpty) {
+                                Bookmark.delete(
+                                    context, sanitizePath(article.title!));
+                                setState(() {});
+                              } else {
+                                Bookmark.insert(context, {
+                                  'title': sanitizePath(article.title!),
+                                  'author': article.author ?? "",
+                                  'image_url': article.urlToImage ?? "",
+                                  'article_url': article.url ?? "",
+                                });
+                                setState(() {});
+                              }
                             },
                             icon: Icon(
-                                    Icons.bookmark,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ))
+                              Icons.bookmark,
+                              color: bookmarkList
+                                      .where((element) =>
+                                          sanitizePath(article.title!).contains(
+                                              sanitizePath(element['title'])))
+                                      .isNotEmpty
+                                  ? Colors.yellowAccent
+                                  : Colors.white,
+                              size: 30,
+                            ))
                       ],
                     ),
                     Row(

@@ -14,11 +14,11 @@ class Bookmark {
           .ref()
           .child("bookmarks")
           .child(user!.uid)
-          .child(berita['title'])
+          .child(berita['title'].toString())
           .set({
-            "author":berita['author'],
-            "image_url":berita['image_url'],
-            "article_url":berita['article_url'],
+            "author":berita['author'].toString(),
+            "image_url":berita['image_url'].toString(),
+            "article_url":berita['article_url'].toString(),
           })
           .whenComplete(() {
         // Menampilkan alert berhasil jika codingan di atas berhasil dan selesai
@@ -35,7 +35,7 @@ class Bookmark {
           dismissOnTap: true, duration: const Duration(seconds: 5));
     }
   }
-  static void update(BuildContext context,Map<dynamic,dynamic> berita) async {
+  static void delete(BuildContext context,String title) async {
     try {
       // UI Loading
       var user = FirebaseAuth.instance.currentUser;
@@ -52,17 +52,11 @@ class Bookmark {
           .ref()
           .child("bookmarks")
           .child(user!.uid)
-          .child(berita['id'])
-          .push()
-          .set({
-            "nama":berita['nama'],
-            "author":berita['author'],
-            "image_url":berita['image_url'],
-            "article_url":berita['article_url'],
-          })
+          .child(title)
+          .remove()
           .whenComplete(() {
         // Menampilkan alert berhasil jika codingan di atas berhasil dan selesai
-        EasyLoading.showSuccess('Bookmarks telah di tambahkan',
+        EasyLoading.showSuccess('Bookmarks telah di hapus',
             dismissOnTap: true, duration: const Duration(seconds: 5));
         return;
       }).onError((error, stackTrace) {
