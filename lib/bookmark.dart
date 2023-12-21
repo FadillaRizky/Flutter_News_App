@@ -35,7 +35,7 @@ class Bookmark {
           dismissOnTap: true, duration: const Duration(seconds: 5));
     }
   }
-  static void delete(BuildContext context,String title) async {
+  static Future<void> delete(BuildContext context,String title) async {
     try {
       // UI Loading
       var user = FirebaseAuth.instance.currentUser;

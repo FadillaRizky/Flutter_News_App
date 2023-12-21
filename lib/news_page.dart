@@ -44,6 +44,7 @@ class _NewsPageState extends State<NewsPage> {
   ];
 
   int pageSize = 10;
+  int? page;
   bool loading = true;
   RefreshController refreshC = RefreshController();
   List<Article> result = [];
@@ -57,14 +58,15 @@ class _NewsPageState extends State<NewsPage> {
 
   refreshData() async {
     pageSize = 10;
-    future = getNewsData();
+    page = Random().nextInt(10);
+    future = getNewsData(page: page);
     setState(() {});
     refreshC.refreshCompleted();
   }
 
   void loadData() async {
     pageSize += 10;
-    future = getNewsData();
+    future = getNewsData(page: page);
     setState(() {});
     refreshC.loadComplete();
   }
@@ -74,7 +76,9 @@ class _NewsPageState extends State<NewsPage> {
     selectedCategory = categoryItems[0];
     cekUser();
     getPref();
-    future = getNewsData();
+    page = Random().nextInt(10);
+    print(page);
+    future = getNewsData(page: page);
     futureCarousel = getNewsCarousel();
     getBookmark();
     super.initState();
@@ -130,27 +134,8 @@ class _NewsPageState extends State<NewsPage> {
     setState(() {
       id_user = pref.getString('id_user')!;
     });
-    setState(() {
-      getUserFromFirebase();
-    });
   }
 
-  Future<void> getUserFromFirebase() async {
-    try {
-      FirebaseDatabase.instance
-          .ref()
-          .child("user") // Parent di database
-          .child(id_user) // Id user
-          .onValue
-          .listen((event) {
-        var snapshot = event.snapshot.value as Map;
-        name = snapshot['name'].toString();
-        email = snapshot['email'].toString();
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
 
   Future<List<Article>> getNewsData({int? page}) async {
     NewsAPI newsAPI = NewsAPI(API_KEY);
@@ -159,7 +144,7 @@ class _NewsPageState extends State<NewsPage> {
       query: searchTerm,
       category: selectedCategory,
       pageSize: pageSize,
-      // page: page
+      page: page
     );
   }
 
@@ -192,8 +177,8 @@ class _NewsPageState extends State<NewsPage> {
               SizedBox(
                 height: 30,
               ),
-              Text(name ?? "Nama"),
-              Text(email ?? "email"),
+              Text(FirebaseAuth.instance.currentUser!.displayName ?? "-",style: TextStyle(fontSize: 20),),
+              Text(FirebaseAuth.instance.currentUser!.email ?? "-"),
               SizedBox(
                 height: 70,
               ),
@@ -567,13 +552,13 @@ class _NewsPageState extends State<NewsPage> {
                           width: 5,
                         ),
                         IconButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (bookmarkList
                                   .where((element) =>
                                       sanitizePath(article.title!).contains(
                                           sanitizePath(element['title'])))
                                   .isNotEmpty) {
-                                Bookmark.delete(
+                                await Bookmark.delete(
                                     context, sanitizePath(article.title!));
                                 setState(() {});
                               } else {
@@ -592,7 +577,7 @@ class _NewsPageState extends State<NewsPage> {
                                       .where((element) =>
                                           sanitizePath(article.title!).contains(
                                               sanitizePath(element['title'])))
-                                      .isNotEmpty
+                                      .isNotEmpty && bookmarkList.length >= 0
                                   ? Colors.yellowAccent
                                   : Colors.white,
                               size: 30,

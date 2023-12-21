@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 
+import 'bookmark.dart';
 import 'news_web_view.dart';
 
 class BacaNanti extends StatefulWidget {
@@ -13,6 +14,14 @@ class BacaNanti extends StatefulWidget {
 
   @override
   State<BacaNanti> createState() => _BacaNantiState();
+}
+
+String sanitizePath(String originalPath) {
+  // Replace the invalid characters with valid ones or remove them
+  String sanitized = originalPath.replaceAll(RegExp(r'[.#$\[\]]'), '');
+  // You might also want to replace spaces with a valid character like "_"
+  sanitized = sanitized.replaceAll(' ', '_');
+  return sanitized;
 }
 
 class _BacaNantiState extends State<BacaNanti> {
@@ -25,13 +34,25 @@ class _BacaNantiState extends State<BacaNanti> {
       body: StreamBuilder(
         stream: FirebaseDatabase.instance
             .ref()
-            .child("user")
+            .child("bookmarks")
             .child(widget.idUser)
-            .child(DateFormat('yyyy-MM', "id").format(DateTime.now()))
             .onValue,
         builder: (context, snapshot) {
           if (snapshot.hasData && (snapshot.data!).snapshot.value != null) {
-            return buildListReadLater(snapshot);
+            Map<dynamic, dynamic> data = Map<dynamic, dynamic>.from(
+                (snapshot.data! as DatabaseEvent).snapshot.value
+                    as Map<dynamic, dynamic>);
+            List<Map<dynamic, dynamic>> dataList = [];
+            data.forEach((key, value) {
+              final currentData = Map<String, dynamic>.from(value);
+              dataList.add({
+                'title': key,
+                'image_url': currentData['image_url'],
+                'article_url': currentData['article_url'],
+                'author': currentData['author'],
+              });
+            });
+            return buildListReadLater(dataList);
           }
           if (snapshot.hasData) {
             return Center(
@@ -46,11 +67,10 @@ class _BacaNantiState extends State<BacaNanti> {
     );
   }
 
-  ListView buildListReadLater(AsyncSnapshot<DatabaseEvent> snapshot) {
+  ListView buildListReadLater(List<Map<dynamic, dynamic>> data) {
     return ListView.builder(
-      itemCount: 10,
+      itemCount: data.length,
       itemBuilder: (context, index) {
-        // Article article = snapshot.data[index];
         return AnimationConfiguration.staggeredList(
           position: index,
           duration: const Duration(seconds: 1),
@@ -59,11 +79,12 @@ class _BacaNantiState extends State<BacaNanti> {
             child: FadeInAnimation(
               child: InkWell(
                 onTap: () {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //       builder: (context) => NewsWebView(url: snapshot.data[index].url!),
-                  //     ));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            NewsWebView(url: data[index]['article_url'] ?? ""),
+                      ));
                 },
                 child: Padding(
                   padding: EdgeInsets.all(10),
@@ -74,8 +95,7 @@ class _BacaNantiState extends State<BacaNanti> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Image.network(
-                            // article.urlToImage ?? "",
-                            "-",
+                            data[index]['image_url'] ?? "",
                             width: double.infinity,
                             height: 300,
                             fit: BoxFit.cover,
@@ -139,8 +159,9 @@ class _BacaNantiState extends State<BacaNanti> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      // article.title!,
-                                      "-",
+                                      data[index]['title']
+                                              .replaceAll('_', ' ') ??
+                                          "-",
                                       style: TextStyle(
                                           color: Colors.white, fontSize: 16),
                                       maxLines: 2,
@@ -151,7 +172,17 @@ class _BacaNantiState extends State<BacaNanti> {
                                     width: 5,
                                   ),
                                   IconButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (data
+                                          .where((element) =>
+                                          sanitizePath(data[index]['title']).contains(
+                                              sanitizePath(element['title'])))
+                                          .isNotEmpty) {
+                                        Bookmark.delete(
+                                            context, sanitizePath(data[index]['title']));
+                                        setState(() {});
+                                      }
+                                    },
                                     icon: Icon(
                                       Icons.bookmark,
                                       color: Colors.white,
@@ -167,23 +198,13 @@ class _BacaNantiState extends State<BacaNanti> {
                                   SizedBox(
                                     width: 120,
                                     child: Text(
-                                      // article.author ?? "-",
-                                      "-",
+                                      data[index]['title'] ?? "-",
                                       style: TextStyle(
                                           color: Colors.white, fontSize: 11),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  Text(
-                                    // DateFormat('EEEE, dd MMMM yyyy')
-                                    //     .format(DateTime.parse(article.publishedAt!)),
-                                    "-",
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 11),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  )
                                 ],
                               )
                             ],
