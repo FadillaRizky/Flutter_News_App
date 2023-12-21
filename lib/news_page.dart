@@ -1,7 +1,10 @@
 import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_news_app/baca_nanti.dart';
 import 'package:flutter_news_app/bookmark.dart';
 import 'package:flutter_news_app/news_web_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -10,6 +13,9 @@ import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -21,6 +27,7 @@ class NewsPage extends StatefulWidget {
 class _NewsPageState extends State<NewsPage> {
   late Future<List<Article>> future;
   late Future<List<Article>> futureCarousel;
+  String id_user = "";
   String? searchTerm;
   bool isSearching = false;
   TextEditingController searchController = TextEditingController();
@@ -42,6 +49,9 @@ class _NewsPageState extends State<NewsPage> {
 
   late String selectedCategory;
 
+  String? name;
+  String? email;
+
   refreshData() async {
     pageSize = 10;
     future = getNewsData();
@@ -59,9 +69,49 @@ class _NewsPageState extends State<NewsPage> {
   @override
   void initState() {
     selectedCategory = categoryItems[0];
+    cekUser();
+    getPref();
     future = getNewsData();
     futureCarousel = getNewsCarousel();
     super.initState();
+  }
+
+  void cekUser() {
+    // Logic cek Data User apakah sudah pernah login
+    if (FirebaseAuth.instance.currentUser == null) {
+      FirebaseAuth.instance.currentUser;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LoginPage()));
+      });
+    }
+  }
+
+  Future<void> getPref() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      id_user = pref.getString('id_user')!;
+    });
+    setState(() {
+      getUserFromFirebase();
+    });
+  }
+
+  Future<void> getUserFromFirebase() async {
+    try {
+      FirebaseDatabase.instance
+          .ref()
+          .child("user") // Parent di database
+          .child(id_user) // Id user
+          .onValue
+          .listen((event) {
+        var snapshot = event.snapshot.value as Map;
+        name = snapshot['name'].toString();
+        email = snapshot['email'].toString();
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
   }
 
   Future<List<Article>> getNewsData({int? page}) async {
@@ -90,6 +140,37 @@ class _NewsPageState extends State<NewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: isSearching ? searchAppBar() : appBar(),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 30,
+              ),
+              Text(name ?? "Nama"),
+              Text(email ?? "email"),
+              SizedBox(
+                height: 70,
+              ),
+              ListTile(
+                title: Text(
+                  "Baca Nanti",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (ctx) => BacaNanti(
+                                idUser: id_user,
+                              )));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
           child: Column(
         children: [
@@ -206,10 +287,12 @@ class _NewsPageState extends State<NewsPage> {
 
   appBar() {
     return AppBar(
-      automaticallyImplyLeading: false,
       backgroundColor: Colors.blueAccent,
       iconTheme: IconThemeData(color: Colors.white),
-      title: const Text("News App",style: TextStyle(color: Colors.white),),
+      title: const Text(
+        "News App",
+        style: TextStyle(color: Colors.white),
+      ),
       actions: [
         IconButton(
             onPressed: () {
@@ -423,11 +506,28 @@ class _NewsPageState extends State<NewsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      article.title!,
-                      style: TextStyle(color: Colors.white,fontSize: 16),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            article.title!,
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        IconButton(
+                            onPressed: () {
+                            },
+                            icon: Icon(
+                                    Icons.bookmark,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ))
+                      ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -436,14 +536,15 @@ class _NewsPageState extends State<NewsPage> {
                           width: 120,
                           child: Text(
                             article.author ?? "-",
-                            style: TextStyle(color: Colors.white,fontSize: 11),
+                            style: TextStyle(color: Colors.white, fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
-                          DateFormat('EEEE, dd MMMM yyyy').format(DateTime.parse(article.publishedAt!)),
-                          style: TextStyle(color: Colors.white,fontSize: 11),
+                          DateFormat('EEEE, dd MMMM yyyy')
+                              .format(DateTime.parse(article.publishedAt!)),
+                          style: TextStyle(color: Colors.white, fontSize: 11),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -533,7 +634,10 @@ class _NewsPageState extends State<NewsPage> {
                     ? Colors.blueAccent.withOpacity(0.2)
                     : Colors.blueAccent,
               )),
-              child: Text(categoryItems[index],style: TextStyle(color: Colors.white),),
+              child: Text(
+                categoryItems[index],
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           );
         },
