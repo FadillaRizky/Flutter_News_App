@@ -6,7 +6,6 @@ import 'package:flutter_news_app/login.dart';
 
 class Bookmark {
   static void insert(BuildContext context,Map<dynamic,dynamic> berita) async {
-    print(berita);
     try {
       // UI Loading
       var user = FirebaseAuth.instance.currentUser;
