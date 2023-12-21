@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_news_app/bookmark.dart';
 import 'package:flutter_news_app/news_web_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -342,11 +343,17 @@ class _NewsPageState extends State<NewsPage> {
   Widget _buildNewsItem(Article article) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => NewsWebView(url: article.url!),
-            ));
+        Bookmark.insert(context, {
+          'title':article.title,
+          'author':article.author,
+          'image_url':article.urlToImage,
+          'article_url':article.url,
+        });
+        // Navigator.push(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => NewsWebView(url: article.url!),
+        //     ));
       },
       child:Padding(
         padding: EdgeInsets.all(10),
