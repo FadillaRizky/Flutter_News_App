@@ -35,6 +35,7 @@ class _NewsPageState extends State<NewsPage> {
   List<Map<dynamic, dynamic>> bookmarkList = [];
 
   List<String> categoryItems = [
+    "BERANDA",
     "BUSINESS",
     "ENTERTAINMENT",
     "HEALTH",
@@ -43,15 +44,18 @@ class _NewsPageState extends State<NewsPage> {
     "TECHNOLOGY",
   ];
 
+
   int pageSize = 10;
   int? page;
+  int? randomCategory;
   bool loading = true;
   RefreshController refreshC = RefreshController();
   List<Article> result = [];
 
-  String API_KEY = "5c5fb3cc64b641518c35edeb91863d3f";
+  String API_KEY = "1edb916b4699496faf14f04ffd49fc52";
 
   late String selectedCategory;
+  late String category;
 
   FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -61,7 +65,7 @@ class _NewsPageState extends State<NewsPage> {
   refreshData() async {
     pageSize = 10;
     page = Random().nextInt(10);
-    future = getNewsData(page: page);
+    future =  getNewsData(page: page);
     setState(() {});
     refreshC.refreshCompleted();
   }
@@ -75,11 +79,17 @@ class _NewsPageState extends State<NewsPage> {
 
   @override
   void initState() {
+    randomCategory = Random().nextInt(6) + 1;
+    print(randomCategory);
     selectedCategory = categoryItems[0];
+    if (selectedCategory == "BERANDA") {
+      category = categoryItems[randomCategory!];
+    }
     cekUser();
     getPref();
     page = Random().nextInt(10);
-    print(page);
+    // print(page);
+    // future = getinitNewsData();
     future = getNewsData(page: page);
     futureCarousel = getNewsCarousel();
     getBookmark();
@@ -138,13 +148,24 @@ class _NewsPageState extends State<NewsPage> {
     });
   }
 
+  Future<List<Article>> getinitNewsData({int? page}) async {
+    NewsAPI newsAPI = NewsAPI(API_KEY);
+    return await newsAPI.getTopHeadlines(
+        country: "us",
+        query: searchTerm,
+        category: selectedCategory[randomCategory!],
+        pageSize: pageSize,
+        page: page
+    );
+  }
+
 
   Future<List<Article>> getNewsData({int? page}) async {
     NewsAPI newsAPI = NewsAPI(API_KEY);
     return await newsAPI.getTopHeadlines(
       country: "us",
       query: searchTerm,
-      category: selectedCategory,
+      category: category,
       pageSize: pageSize,
       page: page
     );
@@ -692,10 +713,26 @@ class _NewsPageState extends State<NewsPage> {
             padding: const EdgeInsets.all(8),
             child: ElevatedButton(
               onPressed: () {
-                setState(() {
-                  selectedCategory = categoryItems[index];
-                  future = getNewsData();
-                });
+                // print(categoryItems[index]);
+                if (categoryItems[index] == "BERANDA"){
+                  setState(() {
+                    selectedCategory = categoryItems[index];
+                    category = categoryItems[randomCategory!];
+                    print("-------------");
+                    print(randomCategory);
+                    future = getNewsData();
+                  });
+                  setState(() {
+
+                  });
+                }else{
+                  setState(() {
+                    selectedCategory = categoryItems[index];
+                    category = categoryItems[index];
+                    future = getNewsData();
+                  });
+                }
+
               },
               style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(
@@ -711,6 +748,7 @@ class _NewsPageState extends State<NewsPage> {
           );
         },
         itemCount: categoryItems.length,
+
         scrollDirection: Axis.horizontal,
       ),
     );
