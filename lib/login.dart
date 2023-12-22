@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
     if (FirebaseAuth.instance.currentUser != null) {
       FirebaseAuth.instance.currentUser;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => NewsPage()));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const NewsPage()));
       });
     }
   }
@@ -87,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
+                const SizedBox(
                   height: 50,
                 ),
                 Image.asset(
@@ -106,10 +106,10 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Login",
                         textAlign: TextAlign.left,
-                        style: TextStyle(
+                        style:  TextStyle(
                           color: Color(0xFF36454F),
                           fontSize: 26,
                           fontWeight: FontWeight.w500,
@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 isDense: true,
-                                contentPadding: EdgeInsets.fromLTRB(15, 30, 15, 0),
+                                contentPadding: const EdgeInsets.fromLTRB(15, 30, 15, 0),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(13),
                                   borderSide: const BorderSide(width: 1, color: Color(0xFFDEDEDE)),
@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
                                   },
                                 ),
                                 isDense: true,
-                                contentPadding: EdgeInsets.fromLTRB(15, 30, 15, 0),
+                                contentPadding: const EdgeInsets.fromLTRB(15, 30, 15, 0),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(13),
                                   borderSide: const BorderSide(width: 1, color: Color(0xFFDEDEDE)),
@@ -306,16 +306,16 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 RichText(
                   text: TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: "Belum punya akun? ",
-                        style: TextStyle(
-                          color: Color(0xFF374253),
+                        style:  TextStyle(
+                          color:  Color(0xFF374253),
                           fontSize: 16,
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w400,
@@ -323,8 +323,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       TextSpan(
                         text: 'Daftar',
-                        style: TextStyle(
-                          color: Color(0xFF2FA4D9),
+                        style: const TextStyle(
+                          color:  Color(0xFF2FA4D9),
                           fontSize: 16,
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w400,

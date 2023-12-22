@@ -44,7 +44,7 @@ class Bookmark {
           EasyLoading.showError("Anda Perlu Login lagi!",
             dismissOnTap: true, duration: const Duration(seconds: 5));
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => LoginPage()));
+              MaterialPageRoute(builder: (context) => const LoginPage()));
         });
       }
       // Insert data lembur ke Firebase Database

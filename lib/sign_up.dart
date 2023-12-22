@@ -54,7 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
     if (FirebaseAuth.instance.currentUser != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (context) => NewsPage()));
+            .pushReplacement(MaterialPageRoute(builder: (context) => const NewsPage()));
       });
     }
   }

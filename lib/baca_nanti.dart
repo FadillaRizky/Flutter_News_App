@@ -1,8 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:intl/intl.dart';
-import 'package:news_api_flutter_package/model/article.dart';
 
 import 'bookmark.dart';
 import 'news_web_view.dart';
@@ -29,7 +27,7 @@ class _BacaNantiState extends State<BacaNanti> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Baca Nanti"),
+        title: const Text("Baca Nanti"),
       ),
       body: StreamBuilder(
         stream: FirebaseDatabase.instance
@@ -55,8 +53,8 @@ class _BacaNantiState extends State<BacaNanti> {
             return buildListReadLater(dataList);
           }
           if (snapshot.hasData) {
-            return Center(
-              child: Text("Tidak ada Berita"),
+            return const Center(
+              child:  Text("Tidak ada Berita"),
             );
           }
           return const Center(
@@ -87,7 +85,7 @@ class _BacaNantiState extends State<BacaNanti> {
                       ));
                 },
                 child: Padding(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   child: Stack(
                     children: [
                       SizedBox(
@@ -131,7 +129,7 @@ class _BacaNantiState extends State<BacaNanti> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment(0, 1),
                               colors: <Color>[
@@ -148,7 +146,7 @@ class _BacaNantiState extends State<BacaNanti> {
                         bottom: 5,
                         right: 5,
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 9),
+                          padding: const EdgeInsets.symmetric(horizontal: 9),
                           width: double.infinity,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -162,13 +160,13 @@ class _BacaNantiState extends State<BacaNanti> {
                                       data[index]['title']
                                               .replaceAll('_', ' ') ??
                                           "-",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           color: Colors.white, fontSize: 16),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 5,
                                   ),
                                   IconButton(
@@ -183,7 +181,7 @@ class _BacaNantiState extends State<BacaNanti> {
                                         setState(() {});
                                       }
                                     },
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.bookmark,
                                       color: Colors.white,
                                       size: 30,
@@ -199,7 +197,7 @@ class _BacaNantiState extends State<BacaNanti> {
                                     width: 120,
                                     child: Text(
                                       data[index]['title'] ?? "-",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           color: Colors.white, fontSize: 11),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

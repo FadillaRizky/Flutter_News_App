@@ -9,7 +9,6 @@ import 'package:flutter_news_app/baca_nanti.dart';
 import 'package:flutter_news_app/bookmark.dart';
 import 'package:flutter_news_app/news_web_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
@@ -80,7 +79,6 @@ class _NewsPageState extends State<NewsPage> {
   @override
   void initState() {
     randomCategory = Random().nextInt(6) + 1;
-    print(randomCategory);
     selectedCategory = categoryItems[0];
     if (selectedCategory == "BERANDA") {
       category = categoryItems[randomCategory!];
@@ -103,7 +101,7 @@ class _NewsPageState extends State<NewsPage> {
         EasyLoading.showError("Anda Perlu Login lagi!",
             dismissOnTap: true, duration: const Duration(seconds: 5));
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LoginPage()));
+            MaterialPageRoute(builder: (context) => const LoginPage()));
       });
     }
     await FirebaseDatabase.instance
@@ -136,7 +134,7 @@ class _NewsPageState extends State<NewsPage> {
       FirebaseAuth.instance.currentUser;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LoginPage()));
+            MaterialPageRoute(builder: (context) => const LoginPage()));
       });
     }
   }
@@ -197,20 +195,20 @@ class _NewsPageState extends State<NewsPage> {
         child: SafeArea(
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
-              Text(FirebaseAuth.instance.currentUser!.displayName ?? "-",style: TextStyle(fontSize: 20),),
+              Text(FirebaseAuth.instance.currentUser!.displayName ?? "-",style: const TextStyle(fontSize: 20),),
               Text(FirebaseAuth.instance.currentUser!.email ?? "-"),
-              SizedBox(
+              const SizedBox(
                 height: 70,
               ),
               ListTile(
-                title: Text(
+                title: const Text(
                   "Baca Nanti",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                trailing: Icon(Icons.arrow_forward_ios),
+                trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
                   Navigator.push(
                       context,
@@ -221,15 +219,15 @@ class _NewsPageState extends State<NewsPage> {
                 },
               ),
               ListTile(
-                title: Text(
+                title: const Text(
                   "Log Out",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                trailing: Icon(Icons.logout,color: Colors.red,),
+                trailing: const Icon(Icons.logout,color: Colors.red,),
                 onTap: () {
                    auth.signOut();
                    Navigator.pop(context);
-                   Navigator.pushReplacement(context, MaterialPageRoute(builder: (ctx)=> LoginPage()));
+                   Navigator.pushReplacement(context, MaterialPageRoute(builder: (ctx)=> const LoginPage()));
                 },
               ),
             ],
@@ -246,7 +244,7 @@ class _NewsPageState extends State<NewsPage> {
                   child: CircularProgressIndicator(),
                 );
               } else if (snapshot.hasError) {
-                return Text("Error loading the news");
+                return const Text("Error loading the news");
               } else {
                 if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                   return _buildNewsCarousel(snapshot.data as List<Article>);
@@ -271,12 +269,12 @@ class _NewsPageState extends State<NewsPage> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Error loading the news"),
+                      const Text("Error loading the news"),
                       ElevatedButton(
                           onPressed: () {
                             refreshData();
                           },
-                          child: Text("Click to Refresh"))
+                          child: const Text("Click to Refresh"))
                     ],
                   );
                 } else {
@@ -286,12 +284,12 @@ class _NewsPageState extends State<NewsPage> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("No news available"),
+                        const Text("No news available"),
                         ElevatedButton(
                             onPressed: () {
                               refreshData();
                             },
-                            child: Text("Click to Refresh"))
+                            child: const Text("Click to Refresh"))
                       ],
                     );
                   }
@@ -308,7 +306,7 @@ class _NewsPageState extends State<NewsPage> {
   searchAppBar() {
     return AppBar(
       backgroundColor: Colors.blueAccent,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
@@ -357,7 +355,7 @@ class _NewsPageState extends State<NewsPage> {
   appBar() {
     return AppBar(
       backgroundColor: Colors.blueAccent,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       title: const Text(
         "News App",
         style: TextStyle(color: Colors.white),
@@ -389,7 +387,7 @@ class _NewsPageState extends State<NewsPage> {
               },
               child: Stack(
                 children: [
-                  Container(
+                  SizedBox(
                       width: MediaQuery.of(context).size.width,
                       child: Image.network(
                         "${i.urlToImage}",
@@ -419,7 +417,7 @@ class _NewsPageState extends State<NewsPage> {
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment(0, 1),
@@ -436,19 +434,19 @@ class _NewsPageState extends State<NewsPage> {
                     bottom: 7,
                     right: 5,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 9),
+                      padding: const EdgeInsets.symmetric(horizontal: 9),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             i.title ?? "-",
-                            style: TextStyle(color: Colors.white, fontSize: 18),
+                            style: const TextStyle(color: Colors.white, fontSize: 18),
                             maxLines: 1,
                           ),
                           Text(
                             i.description ?? "-",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
                             maxLines: 2,
                           ),
                         ],
@@ -465,8 +463,8 @@ class _NewsPageState extends State<NewsPage> {
         height: 200.0,
         enlargeCenterPage: true,
         autoPlay: true,
-        autoPlayInterval: Duration(seconds: 2),
-        autoPlayAnimationDuration: Duration(milliseconds: 800),
+        autoPlayInterval: const Duration(seconds: 2),
+        autoPlayAnimationDuration: const Duration(milliseconds: 800),
         autoPlayCurve: Curves.fastOutSlowIn,
       ),
     );
@@ -499,14 +497,14 @@ class _NewsPageState extends State<NewsPage> {
   Widget _buildNewsItem(Article article) {
     return InkWell(
       onTap: () {
-        // Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => NewsWebView(url: article.url!),
-        //     ));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewsWebView(url: article.url!),
+            ));
       },
       child: Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         child: Stack(
           children: [
             SizedBox(
@@ -549,7 +547,7 @@ class _NewsPageState extends State<NewsPage> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment(0, 1),
                     colors: <Color>[
@@ -566,7 +564,7 @@ class _NewsPageState extends State<NewsPage> {
               bottom: 5,
               right: 5,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 9),
+                padding: const EdgeInsets.symmetric(horizontal: 9),
                 width: double.infinity,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -578,12 +576,12 @@ class _NewsPageState extends State<NewsPage> {
                         Expanded(
                           child: Text(
                             article.title!,
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 5,
                         ),
                         IconButton(
@@ -626,7 +624,7 @@ class _NewsPageState extends State<NewsPage> {
                           width: 120,
                           child: Text(
                             article.author ?? "-",
-                            style: TextStyle(color: Colors.white, fontSize: 11),
+                            style: const TextStyle(color: Colors.white, fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -634,7 +632,7 @@ class _NewsPageState extends State<NewsPage> {
                         Text(
                           DateFormat('EEEE, dd MMMM yyyy')
                               .format(DateTime.parse(article.publishedAt!)),
-                          style: TextStyle(color: Colors.white, fontSize: 11),
+                          style: const TextStyle(color: Colors.white, fontSize: 11),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -718,8 +716,6 @@ class _NewsPageState extends State<NewsPage> {
                   setState(() {
                     selectedCategory = categoryItems[index];
                     category = categoryItems[randomCategory!];
-                    print("-------------");
-                    print(randomCategory);
                     future = getNewsData();
                   });
                   setState(() {
@@ -742,7 +738,7 @@ class _NewsPageState extends State<NewsPage> {
               )),
               child: Text(
                 categoryItems[index],
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           );
